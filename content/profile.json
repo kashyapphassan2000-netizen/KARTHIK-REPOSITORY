@@ -1,0 +1,38 @@
+{
+  "name": "Karthik",
+  "headline": "Forward Deployed Engineer · AI / ML Systems",
+  "location": "Bengaluru, India",
+  "email": "",
+  "phone": "",
+  "linkedin": "",
+  "github": "",
+  "website": "",
+  "photo": "",
+  "resume": "",
+  "summary": "I turn a client's messy business problem into an AI system that can actually run in their environment. I work from the requirement document to the architecture, data model, agent design, security controls, capacity plan and cost model — and I keep every number traceable. My recent work covers agentic investigation platforms on AWS (LangGraph, RAG, knowledge graphs, LLM gateways) and domain-specific LLMs fine-tuned and served under tight latency and compliance limits.",
+  "openTo": [
+    "Forward Deployed Engineer",
+    "AI Engineer",
+    "Applied ML / LLM Engineer",
+    "Solutions Engineer (AI)"
+  ],
+  "focusAreas": [
+    {
+      "title": "Client problem → architecture",
+      "text": "Read the requirement document, separate MUST from SHOULD, and design a system whose every component traces back to a requirement and an acceptance test."
+    },
+    {
+      "title": "Agents & RAG that are safe to deploy",
+      "text": "Bounded LangGraph agents with tool budgets, citation verification, quarantined readers for untrusted text and human approval before any side effect."
+    },
+    {
+      "title": "LLMs under real constraints",
+      "text": "Fine-tuning, distillation and quantisation to hit latency, cost and data-residency targets — measured against a baseline the model must beat."
+    },
+    {
+      "title": "Capacity, cost and operations",
+      "text": "Demand models, GPU and data-store sizing, managed-vs-self-hosted break-even analysis, SLOs, DR and observability."
+    }
+  ],
+  "skills": []
+}
