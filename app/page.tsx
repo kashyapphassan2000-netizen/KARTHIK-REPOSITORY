@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OwnerFab from "@/components/OwnerFab";
 import { ArrowRight, FileText, FOCUS_ICONS, Github, Globe, Linkedin, Mail, Pin, Sparkle } from "@/components/icons";
 import { getContent, skillIndex } from "@/lib/content";
 import { groupSkills, TAXONOMY } from "@/lib/taxonomy";
@@ -201,6 +202,7 @@ export default function Home() {
         </section>
       </main>
 
+      <OwnerFab />
       <footer>
         <div className="container footer-inner">
           <span>© {new Date().getFullYear()} {profile.name}</span>

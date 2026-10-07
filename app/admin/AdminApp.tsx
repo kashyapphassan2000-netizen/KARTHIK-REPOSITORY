@@ -69,6 +69,12 @@ export default function AdminApp() {
     }
     setData(body as Loaded);
     setState("ready");
+    // Deep links from the "+" button on the public site: /admin?new=project, /admin?tab=profile
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tab");
+    if (t === "profile" || t === "skills" || t === "market" || t === "projects") setTab(t);
+    if (params.get("new") === "project") setEditing({ index: -1, project: emptyProject() });
+    if (params.size) window.history.replaceState(null, "", "/admin");
   }, []);
 
   useEffect(() => {

@@ -291,3 +291,21 @@ footer { padding: 40px 0 56px; color: var(--faint); font-size: 14px; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .reveal, .pulse { animation: none; } html { scroll-behavior: auto; } }
 .photo-badge svg { width: 16px; height: 16px; color: var(--accent-2); }
+
+/* owner-only "+" button */
+.fab-wrap { position: fixed; right: 24px; bottom: 24px; z-index: 80; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.fab {
+  width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; background: var(--grad); color: #fff;
+  font-size: 34px; line-height: 1; box-shadow: 0 14px 34px -10px var(--accent); transition: transform .25s;
+}
+.fab:hover { transform: scale(1.06); }
+.fab.open { transform: rotate(45deg); }
+.fab-menu {
+  display: grid; gap: 4px; padding: 8px; min-width: 260px; border-radius: 16px; background: var(--bg-elev);
+  border: 1px solid var(--border-strong); box-shadow: var(--shadow); animation: rise .2s ease both;
+}
+.fab-menu a { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; }
+.fab-menu a:hover { background: var(--card-hover); }
+.fab-menu b { font-size: 14.5px; }
+.fab-menu span { font-size: 12.5px; color: var(--muted); }
+@media (max-width: 640px) { .fab-wrap { right: 16px; bottom: 16px; } }

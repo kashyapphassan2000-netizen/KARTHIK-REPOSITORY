@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import OwnerFab from "@/components/OwnerFab";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileText } from "@/components/icons";
 import { getContent } from "@/lib/content";
@@ -125,6 +126,7 @@ export default async function ProjectPage({ params }: Props) {
         </div>
       </main>
 
+      <OwnerFab />
       <footer>
         <div className="container footer-inner">
           <span>© {new Date().getFullYear()} {profile.name}</span>
