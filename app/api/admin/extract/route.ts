@@ -4,7 +4,7 @@ import { draftProject, llmProvider, type ProjectDraft } from "@/lib/llm";
 import { detectSkills } from "@/lib/taxonomy";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 // ~400k characters ≈ 100k tokens; above this, split the upload.
 const MAX_TEXT_CHARS = 400_000;

@@ -1,6 +1,6 @@
 /**
  * Optional: drafts project fields from uploaded documents with an LLM.
- *   GEMINI_API_KEY    → Google Gemini (has a free tier; default model gemini-3.8-flash)
+ *   GEMINI_API_KEY    → Google Gemini (has a free tier; tries several Flash models in turn)
  *   ANTHROPIC_API_KEY → Claude (paid; used when no Gemini key is set)
  * Keyword skill detection works without either.
  */
@@ -66,37 +66,60 @@ export async function draftProject(documents: { name: string; text: string }[], 
   throw new Error("No AI key configured (set GEMINI_API_KEY for the free tier).");
 }
 
+// Free-tier Gemini models are often overloaded (503) or slow, so try several in turn.
+const GEMINI_FALLBACKS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"];
+const GEMINI_ATTEMPT_MS = 30_000;
+const GEMINI_TOTAL_MS = 100_000;
+
 async function draftWithGemini(prompt: string): Promise<ProjectDraft> {
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const call = async (withSchema: boolean) =>
+  const models = [...new Set([process.env.GEMINI_MODEL, ...GEMINI_FALLBACKS].filter((m): m is string => Boolean(m)))];
+  const deadline = Date.now() + GEMINI_TOTAL_MS;
+  const failures: string[] = [];
+
+  const call = (model: string, strict: boolean) =>
     fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
+      signal: AbortSignal.timeout(Math.max(1_000, Math.min(GEMINI_ATTEMPT_MS, deadline - Date.now()))),
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [{ role: "user", parts: [{ text: withSchema ? prompt : `${prompt}\n\nReturn only JSON matching this schema:\n${JSON.stringify(DRAFT_SCHEMA)}` }] }],
+        contents: [{ role: "user", parts: [{ text: strict ? prompt : `${prompt}\n\nReturn only JSON matching this schema:\n${JSON.stringify(DRAFT_SCHEMA)}` }] }],
         generationConfig: {
           responseMimeType: "application/json",
-          ...(withSchema ? { responseJsonSchema: DRAFT_SCHEMA } : {}),
+          ...(strict ? { responseJsonSchema: DRAFT_SCHEMA, thinkingConfig: { thinkingLevel: "low" } } : {}),
         },
       }),
     });
-  let res = await call(true);
-  // Older model versions reject responseJsonSchema; fall back to plain JSON mode.
-  if (res.status === 400) res = await call(false);
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 429) throw new Error("Gemini free-tier rate limit reached — wait a minute and try again.");
-    throw new Error(`Gemini request failed (${res.status}): ${body.slice(0, 300)}`);
+
+  for (const model of models) {
+    if (Date.now() > deadline - 2_000) break;
+    try {
+      let res = await call(model, true);
+      // A model that rejects responseJsonSchema / thinkingConfig still supports plain JSON mode.
+      if (res.status === 400) res = await call(model, false);
+      if (res.status === 401 || res.status === 403) {
+        throw Object.assign(new Error("Gemini rejected the API key — check GEMINI_API_KEY in Vercel."), { fatal: true });
+      }
+      if (!res.ok) {
+        failures.push(`${model}: HTTP ${res.status}`);
+        continue; // 404 retired model, 429 rate limit, 503 overloaded → next model
+      }
+      const data = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] }; finishReason?: string }[];
+      };
+      const candidate = data.candidates?.[0];
+      const text = candidate?.content?.parts?.filter((p) => !p.thought).map((p) => p.text ?? "").join("") ?? "";
+      if (candidate?.finishReason === "MAX_TOKENS" || !text) {
+        failures.push(`${model}: ${candidate?.finishReason ?? "empty response"}`);
+        continue;
+      }
+      return JSON.parse(text) as ProjectDraft;
+    } catch (e) {
+      if ((e as { fatal?: boolean }).fatal) throw e;
+      failures.push(`${model}: ${(e as Error).name === "TimeoutError" ? "timed out" : (e as Error).message}`);
+    }
   }
-  const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
-  };
-  const candidate = data.candidates?.[0];
-  if (candidate?.finishReason === "MAX_TOKENS") throw new Error("The draft was cut off; try fewer documents at once.");
-  const text = candidate?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-  if (!text) throw new Error(`Gemini returned no draft (finish reason: ${candidate?.finishReason ?? "unknown"}).`);
-  return JSON.parse(text) as ProjectDraft;
+  throw new Error(`Gemini free tier is busy right now (${failures.join("; ")}). Try again in a few minutes — your skill keywords were still detected.`);
 }
 
 async function draftWithClaude(prompt: string): Promise<ProjectDraft> {
