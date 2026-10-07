@@ -7,7 +7,7 @@
   "linkedin": "",
   "github": "",
   "website": "",
-  "photo": "",
+  "photo": "/uploads/profile/muy4ffvf-profile.jpg",
   "resume": "",
   "summary": "I turn a client's messy business problem into an AI system that can actually run in their environment. I work from the requirement document to the architecture, data model, agent design, security controls, capacity plan and cost model — and I keep every number traceable. My recent work covers agentic investigation platforms on AWS (LangGraph, RAG, knowledge graphs, LLM gateways) and domain-specific LLMs fine-tuned and served under tight latency and compliance limits.",
   "openTo": [
